@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Sistema de minimarket multi-tenant, modular y basado en microservicios estilo AWS Lambda (API Gateway v2).",
   "engines": {
-    "node": ">=24"
+    "node": ">=26 <27"
   },
   "workspaces": [
     "shared",

@@ -165,7 +165,7 @@ cabecera `--changeset` y se incluye en el `changelog.yaml` del servicio.
 
 ## Puesta en marcha (local)
 
-Requisitos: Node 24+, Java 17+ (Liquibase) y PostgreSQL 18.
+Requisitos: Node 26, Java 17+ (Liquibase) y PostgreSQL 18.
 
 1. Completa `config/.env.dev` (la única variable vacía es `DATABASE_POSTGRESQL_ADMIN_PASSWORD`, la de tu usuario `postgres`).
 2. Instala y arranca:
