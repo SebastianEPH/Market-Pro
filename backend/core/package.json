@@ -15,14 +15,14 @@
   },
   "dependencies": {
     "@market-pro/shared": "*",
-    "inversify": "^7.10.2",
-    "jose": "^6.1.0",
-    "pg": "^8.16.3",
-    "reflect-metadata": "^0.2.2",
-    "zod": "^4.1.11"
+    "inversify": "8.2.3",
+    "jose": "6.2.12",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.152",
-    "@types/pg": "^8.15.5"
+    "@types/aws-lambda": "8.10.164",
+    "@types/pg": "8.23.1"
   }
 }

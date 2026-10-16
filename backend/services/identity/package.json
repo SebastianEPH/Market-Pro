@@ -17,11 +17,11 @@
   "dependencies": {
     "@market-pro/core": "*",
     "@market-pro/shared": "*",
-    "inversify": "^7.10.2",
-    "reflect-metadata": "^0.2.2",
-    "zod": "^4.1.11"
+    "inversify": "8.2.3",
+    "reflect-metadata": "0.2.2",
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.152"
+    "@types/aws-lambda": "8.10.164"
   }
 }

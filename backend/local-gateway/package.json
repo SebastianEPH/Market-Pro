@@ -14,6 +14,6 @@
     "@market-pro/sales-service": "*"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.152"
+    "@types/aws-lambda": "8.10.164"
   }
 }

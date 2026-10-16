@@ -41,9 +41,9 @@
     "clean": "tsc -b backend/tsconfig.json --clean"
   },
   "devDependencies": {
-    "@types/node": "^24.5.2",
-    "liquibase": "^4.28.1",
-    "pg": "^8.23.1",
-    "typescript": "^5.9.3"
+    "@types/node": "26.6.5",
+    "liquibase": "4.28.1",
+    "pg": "8.23.1",
+    "typescript": "7.0.2"
   }
 }
