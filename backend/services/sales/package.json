@@ -1,0 +1,27 @@
+{
+  "name": "@market-pro/sales-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Microservicio de ventas: caja, punto de venta, historial y dashboard.",
+  "main": "./dist/handler.js",
+  "exports": {
+    ".": {
+      "types": "./dist/handler.d.ts",
+      "default": "./dist/handler.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@market-pro/core": "*",
+    "@market-pro/shared": "*",
+    "inversify": "^7.10.2",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.152"
+  }
+}

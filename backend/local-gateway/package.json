@@ -1,0 +1,19 @@
+{
+  "name": "@market-pro/local-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Emulador local de API Gateway HTTP API (payload 2.0) que invoca los handlers Lambda de cada microservicio.",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node --env-file-if-exists=../../.env dist/main.js"
+  },
+  "dependencies": {
+    "@market-pro/catalog-service": "*",
+    "@market-pro/identity-service": "*",
+    "@market-pro/sales-service": "*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.152"
+  }
+}

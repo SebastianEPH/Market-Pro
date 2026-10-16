@@ -1,0 +1,16 @@
+{
+  "name": "@market-pro/frontend-common",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Código React compartido por los frontends: cliente API, autenticación, guards de permisos y componentes UI.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles/theme.css"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "^7.9.0"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "extends": "../frontend-common/tsconfig.app.base.json",
+  "include": ["src", "../frontend-common/src"]
+}

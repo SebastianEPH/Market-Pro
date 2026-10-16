@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: market-pro-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+      MARKET_OWNER_PASSWORD: ${MARKET_OWNER_PASSWORD:-owner_dev_password}
+      MARKET_APP_PASSWORD: ${MARKET_APP_PASSWORD:-app_dev_password}
+      TZ: America/Lima
+    ports:
+      - "5432:5432"
+    volumes:
+      # Desde PostgreSQL 18 el volumen se monta en /var/lib/postgresql (no en /data)
+      - market_pro_pg:/var/lib/postgresql
+      # init.sh crea roles, bases y ejecuta todos los scripts de /sql en orden
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  market_pro_pg:

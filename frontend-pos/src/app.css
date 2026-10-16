@@ -1,0 +1,33 @@
+:root {
+  --accent: #059669;
+}
+
+.pos { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 18px; align-items: start; }
+.pos__search { font-size: 1.1rem; padding: 14px 16px; }
+.pos__products { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.pos__product { text-align: left; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; padding: 12px; min-height: 96px; }
+.pos__product small { color: var(--muted); font-weight: 400; }
+.pos__cart { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.pos__lines { display: flex; flex-direction: column; gap: 8px; max-height: 42vh; overflow-y: auto; }
+.pos__line { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+.pos__qty { display: flex; gap: 4px; align-items: center; }
+.pos__qty input { width: 80px; text-align: center; padding: 6px; }
+.pos__totals { display: flex; flex-direction: column; gap: 4px; border-top: 1px dashed var(--border); padding-top: 10px; }
+.pos__total { font-size: 1.6rem; font-weight: 800; }
+.pos__payments { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pos__payments .btn--active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.receipt { font-family: ui-monospace, 'Cascadia Code', monospace; font-size: 0.85rem; max-width: 320px; margin: 0 auto; }
+.receipt hr { border: none; border-top: 1px dashed var(--border); }
+.receipt__row { display: flex; justify-content: space-between; gap: 8px; }
+
+@media (max-width: 1100px) {
+  .pos { grid-template-columns: 1fr; }
+  .pos__cart { position: static; }
+}
+
+@media print {
+  body * { visibility: hidden; }
+  .receipt, .receipt * { visibility: visible; }
+  .receipt { position: absolute; left: 0; top: 0; }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@market-pro/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Núcleo compartido de los microservicios: runtime estilo Lambda (API Gateway v2), DI con inversify, middlewares, router, base de datos y comunicación entre servicios.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@market-pro/shared": "*",
+    "inversify": "^7.10.2",
+    "jose": "^6.1.0",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.152",
+    "@types/pg": "^8.15.5"
+  }
+}

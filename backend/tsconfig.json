@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "../shared" },
+    { "path": "./core" },
+    { "path": "./services/identity" },
+    { "path": "./services/catalog" },
+    { "path": "./services/sales" },
+    { "path": "./local-gateway" }
+  ]
+}

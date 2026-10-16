@@ -1,0 +1,41 @@
+{
+  "name": "market-pro",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sistema de minimarket multi-tenant, modular y basado en microservicios estilo AWS Lambda (API Gateway v2).",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "shared",
+    "backend/core",
+    "backend/services/*",
+    "backend/local-gateway",
+    "frontend-common",
+    "frontend-admin",
+    "frontend-backoffice",
+    "frontend-pos"
+  ],
+  "scripts": {
+    "start": "node scripts/dev.mjs",
+    "build":"npm run build:backend && npm run build:frontends",
+    "build:backend": "tsc -b backend/tsconfig.json",
+    "build:frontends": "npm run build -w @market-pro/frontend-admin && npm run build -w @market-pro/frontend-backoffice && npm run build -w @market-pro/frontend-pos",
+    "watch:backend": "tsc -b backend/tsconfig.json --watch --preserveWatchOutput",
+    "start:gateway": "node --watch --env-file-if-exists=.env backend/local-gateway/dist/main.js",
+    "dev:admin": "npm run dev -w @market-pro/frontend-admin",
+    "dev:backoffice": "npm run dev -w @market-pro/frontend-backoffice",
+    "dev:pos": "npm run dev -w @market-pro/frontend-pos",
+    "typecheck": "tsc -b backend/tsconfig.json && npm run typecheck -w @market-pro/frontend-admin && npm run typecheck -w @market-pro/frontend-backoffice && npm run typecheck -w @market-pro/frontend-pos",
+    "hash-password": "node backend/services/identity/dist/scripts/hash-password.js",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d postgres",
+    "clean": "tsc -b backend/tsconfig.json --clean"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.3"
+  }
+}
