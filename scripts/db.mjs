@@ -5,7 +5,7 @@
 //   npm run db -- <env> <comando>        ej: npm run db -- dev setup
 //
 // Comandos:
-//   bootstrap  crea/actualiza roles (market_owner, market_app) y las 3 bases (usa el superusuario)
+//   bootstrap  crea/actualiza roles (sql/bootstrap/roles.sql) y las 3 bases (usa el superusuario)
 //   update     aplica los changesets pendientes (sql/<servicio>/changelog.yaml)
 //   setup      bootstrap + update
 //   status     changesets pendientes          history   changesets aplicados
@@ -27,6 +27,7 @@ const SERVICES = [
   { name: 'catalog', databaseKey: 'DATABASE_CATALOG' },
   { name: 'sales', databaseKey: 'DATABASE_SALES' },
 ];
+const ROLES_SQL = join(ROOT, 'sql', 'bootstrap', 'roles.sql');
 const LIQUIBASE_COMMANDS = {
   update: ['update'],
   status: ['status', '--verbose'],
@@ -116,19 +117,27 @@ async function executeFormatted(client, template, ...values) {
   await client.query(rows[0].sql);
 }
 
+/** Reemplaza :"var" (identificador) y :'var' (literal) escapándolos con pg, igual que psql -v. */
+function renderSql(client, template, variables) {
+  return template.replace(/:(["'])(\w+)\1/g, (_, quote, name) => {
+    if (!(name in variables)) fail(`[db] ${ROLES_SQL} usa una variable sin valor: ${name}`);
+    return quote === '"' ? client.escapeIdentifier(variables[name]) : client.escapeLiteral(variables[name]);
+  });
+}
+
 async function bootstrap() {
   info(`bootstrap en ${env.DATABASE_POSTGRESQL_HOST}:${env.DATABASE_POSTGRESQL_PORT}`);
   await withAdmin(async (client) => {
-    const roles = [
-      [env.DATABASE_POSTGRESQL_OWNER_USER, env.DATABASE_POSTGRESQL_OWNER_PASSWORD],
-      [env.DATABASE_POSTGRESQL_USER, env.DATABASE_POSTGRESQL_PASSWORD],
-    ];
-    for (const [role, password] of roles) {
-      const exists = (await client.query('SELECT 1 FROM pg_roles WHERE rolname = $1', [role])).rowCount > 0;
-      // Si ya existe se sincroniza la contraseña con la del archivo de entorno
-      await executeFormatted(client, exists ? 'ALTER ROLE %I LOGIN PASSWORD %L' : 'CREATE ROLE %I LOGIN PASSWORD %L', role, password);
-      info(`rol ${role} ${exists ? 'actualizado' : 'creado'}`);
-    }
+    // Roles definidos y documentados en sql/bootstrap/roles.sql (crea o sincroniza la contraseña)
+    client.on('notice', (notice) => info(notice.message));
+    await client.query(
+      renderSql(client, readFileSync(ROLES_SQL, 'utf8'), {
+        owner_user: env.DATABASE_POSTGRESQL_OWNER_USER,
+        owner_password: env.DATABASE_POSTGRESQL_OWNER_PASSWORD,
+        app_user: env.DATABASE_POSTGRESQL_USER,
+        app_password: env.DATABASE_POSTGRESQL_PASSWORD,
+      }),
+    );
 
     for (const service of SERVICES) {
       const database = env[service.databaseKey];
