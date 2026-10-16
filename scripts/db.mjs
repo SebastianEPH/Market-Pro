@@ -161,11 +161,8 @@ function liquibase(service, args) {
   info(`liquibase ${args.join(' ')} -> ${database} (contextos: ${env.LIQUIBASE_CONTEXTS})`);
 
   return new Promise((resolvePromise) => {
-    // En Windows un .bat solo se puede lanzar mediante shell (args fijos, sin datos del usuario)
-    const binary = process.platform === 'win32' ? `"${LIQUIBASE_BIN}"` : LIQUIBASE_BIN;
-    const child = spawn(binary, args, {
+    const options = {
       cwd: ROOT,
-      shell: process.platform === 'win32',
       stdio: 'inherit',
       // Credenciales por variables de entorno (no quedan en la línea de comandos)
       env: {
@@ -178,7 +175,13 @@ function liquibase(service, args) {
         LIQUIBASE_SEARCH_PATH: join(ROOT, 'sql', service.name),
         LIQUIBASE_SHOW_BANNER: 'false',
       },
-    });
+    };
+    // En Windows un .bat solo se puede lanzar mediante shell; se pasa como un único comando
+    // (args fijos, sin datos del usuario) porque Node 26 depreca args + shell (DEP0190)
+    const child =
+      process.platform === 'win32'
+        ? spawn(`"${LIQUIBASE_BIN}" ${args.join(' ')}`, { ...options, shell: true })
+        : spawn(LIQUIBASE_BIN, args, options);
     child.on('exit', (code) => resolvePromise(code ?? 1));
     child.on('error', (error) => {
       console.error(error.message);
