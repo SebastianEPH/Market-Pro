@@ -1,21 +1,28 @@
 #!/usr/bin/env node
 // ------------------------------------------------------------------
-// npm run start -> levanta todo el entorno de desarrollo con recarga automática:
-//   1. PostgreSQL (docker compose)            [omitir con: npm start -- --no-db]
+// npm start [-- <env>] -> levanta todo con recarga automática (env por defecto: dev):
+//   1. Base de datos: roles/bases + migraciones Liquibase   [omitir con --no-db; nunca en PROD]
 //   2. tsc --watch del backend (shared, core, servicios, gateway)
 //   3. Gateway local con node --watch (se reinicia al recompilar)
-//   4. Vite (HMR) para admin, backoffice y POS
-// Sin dependencias externas: solo Node 24+.
+//   4. Vite (HMR) para admin, backoffice y POS con --mode <env>
+// Variables: config/.env.<env>
 // ------------------------------------------------------------------
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { styleText } from 'node:util';
+import { parseEnv, styleText } from 'node:util';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ENV_NAME = process.argv.slice(2).find((arg) => !arg.startsWith('-')) ?? 'dev';
 const SKIP_DB = process.argv.includes('--no-db');
-const GATEWAY_PORT = process.env.GATEWAY_PORT ?? '3000';
+const ENV_PATH = join(ROOT, 'config', `.env.${ENV_NAME}`);
+if (!existsSync(ENV_PATH)) {
+  console.error(styleText('red', `No existe ${ENV_PATH}. Copia config/.env.example y complétalo.`));
+  process.exit(1);
+}
+const ENV_FILE = parseEnv(readFileSync(ENV_PATH, 'utf8'));
+const GATEWAY_PORT = ENV_FILE.GATEWAY_PORT ?? '3000';
 
 const TSC = join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc');
 const VITE = join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
@@ -70,7 +77,7 @@ function banner() {
   const link = (url) => styleText(['cyan', 'underline'], url);
   const lines = [
     '',
-    styleText('bold', '  Market Pro · entorno de desarrollo'),
+    styleText('bold', `  Market Pro · entorno '${ENV_NAME}' (${ENV_FILE.APP_ENVIRONMENT ?? '?'})`),
     '',
     `  ${styleText('yellow', 'Backend (API Gateway)')}  ${link(`http://localhost:${GATEWAY_PORT}`)}   health: ${link(`http://localhost:${GATEWAY_PORT}/health`)}`,
     ...FRONTENDS.map((app) => `  ${styleText(app.color, app.label.padEnd(22))} ${link(`http://localhost:${app.port}`)}`),
@@ -109,17 +116,14 @@ if (!existsSync(TSC) || !existsSync(VITE)) {
   console.error(styleText('red', 'Faltan dependencias. Ejecuta primero: npm install'));
   process.exit(1);
 }
-if (!existsSync(join(ROOT, '.env'))) {
-  console.warn(styleText('yellow', 'No existe .env: copia .env.example a .env (el backend necesita JWT_SECRET, URLs de BD, etc.)'));
-}
+// ------------------------------------------------------------------ 1. base de datos (Liquibase)
 
-// ------------------------------------------------------------------ 1. base de datos
-
-if (!SKIP_DB) {
-  log('db', 'yellow', 'docker compose up -d postgres');
-  const result = spawnSync('docker', ['compose', 'up', '-d', 'postgres'], { cwd: ROOT, stdio: 'inherit' });
+if (ENV_FILE.APP_ENVIRONMENT === 'PROD') {
+  log('db', 'yellow', `PROD: no se migra automáticamente. Usa: npm run db -- ${ENV_NAME} update`);
+} else if (!SKIP_DB) {
+  const result = spawnSync(process.execPath, [join(ROOT, 'scripts', 'db.mjs'), ENV_NAME, 'setup'], { cwd: ROOT, stdio: 'inherit' });
   if (result.status !== 0) {
-    log('db', 'red', 'No se pudo levantar PostgreSQL con Docker (¿Docker Desktop está abierto?). Continuando...');
+    log('db', 'red', 'La base de datos no quedó lista (revisa config/.env.' + ENV_NAME + '). Continuando sin ella...');
   }
 }
 
@@ -133,7 +137,7 @@ function startGateway() {
     'gateway',
     'yellow',
     process.execPath,
-    ['--watch', '--env-file-if-exists=.env', 'backend/local-gateway/dist/main.js'],
+    ['--watch', 'backend/local-gateway/dist/main.js', ENV_NAME],
     { onLine: (line) => line.includes('API Gateway local') && markReady('gateway') },
   );
 }
@@ -151,7 +155,7 @@ run('backend', 'cyan', process.execPath, [TSC, '-b', 'backend/tsconfig.json', '-
 // ------------------------------------------------------------------ 4. frontends
 
 for (const app of FRONTENDS) {
-  run(app.name, app.color, process.execPath, [VITE, '--clearScreen', 'false'], {
+  run(app.name, app.color, process.execPath, [VITE, '--mode', ENV_NAME, '--clearScreen', 'false'], {
     cwd: join(ROOT, app.dir),
     onLine: (line) => line.includes('Local:') && markReady(app.name),
   });

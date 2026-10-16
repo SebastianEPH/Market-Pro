@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset market-pro:catalog-001-schema splitStatements:false
 -- ------------------------------------------------------------------
 -- market_catalog: categorías, productos y movimientos de stock.
 -- ------------------------------------------------------------------

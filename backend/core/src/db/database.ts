@@ -7,18 +7,12 @@ import { DbScope, DbSessionSetting } from '../enums/core.enums.js';
 import { NotFoundError } from '../errors/app-error.js';
 import { Logger } from '../logging/logger.js';
 
-enum PgTypeOid {
-  INT8 = 20,
-  NUMERIC = 1700,
-  TIMESTAMP = 1114,
-  TIMESTAMPTZ = 1184,
-}
-
 // numeric/bigint -> number y timestamps -> ISO string (lo que espera el contrato JSON)
-pg.types.setTypeParser(PgTypeOid.INT8, (value: string) => Number(value));
-pg.types.setTypeParser(PgTypeOid.NUMERIC, (value: string) => Number(value));
-pg.types.setTypeParser(PgTypeOid.TIMESTAMPTZ, (value: string) => new Date(value).toISOString());
-pg.types.setTypeParser(PgTypeOid.TIMESTAMP, (value: string) => new Date(`${value}Z`).toISOString());
+const { builtins } = pg.types;
+pg.types.setTypeParser(builtins.INT8, (value: string) => Number(value));
+pg.types.setTypeParser(builtins.NUMERIC, (value: string) => Number(value));
+pg.types.setTypeParser(builtins.TIMESTAMPTZ, (value: string) => new Date(value).toISOString());
+pg.types.setTypeParser(builtins.TIMESTAMP, (value: string) => new Date(`${value}Z`).toISOString());
 
 /** Ejecutor de consultas ligado a una transacción concreta. */
 export interface DbExecutor {
@@ -70,8 +64,14 @@ export class Database {
     @inject(CoreToken.Logger) private readonly logger: Logger,
   ) {
     this.pool = new pg.Pool({
-      connectionString: config.databaseUrl,
-      max: config.dbPoolMax,
+      host: config.database.host,
+      port: config.database.port,
+      user: config.database.user,
+      password: config.database.password,
+      database: config.database.name,
+      // En RDS usar NODE_EXTRA_CA_CERTS con el bundle de AWS para validar el certificado
+      ssl: config.database.ssl ? { rejectUnauthorized: true } : false,
+      max: config.database.poolMax,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
       application_name: `market-pro-${config.serviceName}`,

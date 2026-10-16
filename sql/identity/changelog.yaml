@@ -1,0 +1,17 @@
+# Changelog Liquibase de la base market_identity. Se ejecuta con: npm run db -- <env> update
+databaseChangeLog:
+  - include:
+      file: 001_schema.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 002_row_level_security.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 003_seed_catalog.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 004_seed_platform_admin.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 900_dev_demo_tenant.sql
+      relativeToChangelogFile: true

@@ -14,12 +14,17 @@ Todo el código está siempre desplegado y activo; el acceso se controla con dat
 
 ```
 Market-Pro/
-├── sql/                      Scripts PostgreSQL 18 (una base por microservicio)
-│   ├── init.sh               Crea roles y bases y ejecuta todo en orden
-│   ├── 00_init/              Roles market_owner / market_app y bases
-│   ├── identity/             Tenants, usuarios, módulos, PERMISOS, roles, features + RLS
-│   ├── catalog/              Categorías, productos, movimientos de stock + RLS
-│   └── sales/                Cajas, ventas, numeración + RLS
+├── config/                   Variables de entorno por ambiente
+│   ├── .env.example          Plantilla (versionada)
+│   ├── .env.dev              Desarrollo (no versionado)
+│   └── .env.prod             Producción (no versionado)
+├── sql/                      Migraciones Liquibase (formatted SQL), una base por microservicio
+│   ├── identity/             changelog.yaml + tenants, usuarios, módulos, PERMISOS, roles, features + RLS
+│   ├── catalog/              changelog.yaml + categorías, productos, movimientos de stock + RLS
+│   └── sales/                changelog.yaml + cajas, ventas, numeración + RLS
+├── scripts/
+│   ├── dev.mjs               npm start: BD + backend + gateway + frontends con recarga
+│   └── db.mjs                Roles/bases + comandos Liquibase por entorno
 ├── shared/                   Enums y contratos TS compartidos (backend + frontends)
 ├── backend/
 │   ├── core/                 Runtime estilo Lambda: APIGW v2, inversify, middlewares, router, BD
@@ -117,27 +122,70 @@ aunque una consulta olvide filtrar, PostgreSQL no devuelve datos de otra tienda.
 
 ---
 
+## Variables de entorno
+
+Un archivo por ambiente en `config/`; el ambiente se pasa como **argumento**:
+
+| Archivo | Uso | Versionado |
+|---|---|---|
+| `config/.env.example` | Plantilla con todas las variables documentadas | Sí |
+| `config/.env.dev` | Desarrollo local | No |
+| `config/.env.prod` | Producción | No |
+| `config/.env.<otro>` | QA, staging… (`npm start -- qa`) | No |
+
+- **Backend:** `Environment` (`backend/core/src/config/environment.ts`) carga `config/.env.<env>` según el argumento
+  del proceso (`node dist/main.js dev`) y valida las variables del enum `ENV`; si falta alguna, aborta listándolas.
+  En **AWS Lambda** no se usa archivo: se leen las variables configuradas en la función.
+- **Frontends:** Vite usa `envDir: ../config` y `--mode <env>` (`dev` en desarrollo, `prod` en build). Solo se exponen las `VITE_*`.
+- **Scripts:** `npm start -- <env>` y `npm run db -- <env> <comando>`.
+
+## Base de datos (Liquibase)
+
+Liquibase 4.28 (paquete npm `liquibase`, requiere Java 17+) con un changelog por base: `sql/<servicio>/changelog.yaml`.
+Cada `.sql` es un changeset en *formatted SQL*; los datos demo (`900_*`) llevan `context:dev` y no se aplican en prod
+(`LIQUIBASE_CONTEXTS`).
+
+| Rol | Variable | Para qué |
+|---|---|---|
+| Superusuario | `DATABASE_POSTGRESQL_ADMIN_*` | Solo `bootstrap`: crear roles y bases |
+| `market_owner` | `DATABASE_POSTGRESQL_OWNER_*` | Liquibase: dueño de las tablas |
+| `market_app` | `DATABASE_POSTGRESQL_USER/PASSWORD` | Microservicios: solo DML, sujeto a RLS |
+
+```bash
+npm run db:setup            # dev: roles + bases + migraciones
+npm run db:migrate          # dev: solo changesets pendientes
+npm run db:status           # dev: pendientes
+npm run db:history          # dev: aplicados
+npm run db:reset            # dev: borra y recrea las 3 bases (bloqueado en PROD)
+npm run db -- prod update   # cualquier entorno / comando
+```
+
+Para un cambio de esquema **no se editan** los archivos ya aplicados: se agrega un nuevo `00X_*.sql` con su
+cabecera `--changeset` y se incluye en el `changelog.yaml` del servicio.
+
 ## Puesta en marcha (local)
 
-Requisitos: Node 24+, Docker.
+Requisitos: Node 24+, Java 17+ (Liquibase) y PostgreSQL 18.
+
+1. Completa `config/.env.dev` (la única variable vacía es `DATABASE_POSTGRESQL_ADMIN_PASSWORD`, la de tu usuario `postgres`).
+2. Instala y arranca:
 
 ```bash
-cp .env.example .env              # en Windows: copy .env.example .env
 npm install
-npm run db:up                     # PostgreSQL 18 + ejecución automática de /sql
-npm run build:backend
-npm run start:gateway             # http://localhost:3000
+npm start                   # = npm start -- dev
 ```
 
-Durante desarrollo, en otra terminal: `npm run watch:backend` (el gateway se reinicia solo con `node --watch`).
+`npm start` crea roles/bases, aplica Liquibase, compila el backend en watch, levanta el gateway y los 3 frontends con
+recarga automática, y muestra los links:
 
-Frontends (cada uno en su terminal):
+| App | URL |
+|---|---|
+| API Gateway | http://localhost:3000 |
+| Admin plataforma | http://localhost:5173 |
+| Backoffice | http://localhost:5174 |
+| POS | http://localhost:5175 |
 
-```bash
-npm run dev:admin        # http://localhost:5173
-npm run dev:backoffice   # http://localhost:5174
-npm run dev:pos          # http://localhost:5175
-```
+Opciones: `npm start -- qa` (otro entorno), `npm start -- dev --no-db` (sin tocar la BD). En `PROD` nunca migra solo.
 
 ### Usuarios de desarrollo
 
@@ -147,10 +195,8 @@ npm run dev:pos          # http://localhost:5175
 | Backoffice (dueño) | `demo` | `owner@demo.local` | `Admin123*` |
 | POS (cajero) | `demo` | `cajero@demo.local` | `Admin123*` |
 
-Los datos demo están en `sql/identity/900_*` y `sql/catalog/900_*` — elimínalos para producción.
+Los datos demo (`sql/identity/900_*`, `sql/catalog/900_*`) solo se aplican con el contexto Liquibase `dev`.
 Para generar otro hash: `npm run hash-password -- "NuevaClave"`.
-
-Si cambias los scripts SQL: `npm run db:reset` (borra el volumen y reinicializa).
 
 ---
 
@@ -187,15 +233,16 @@ Errores: `{ "error": { "code": "PERMISSION_DENIED", "message": "...", "details":
    `@inject(TOKEN)` explícito, así que no depende de `emitDecoratorMetadata`).
 3. Un **HTTP API (API Gateway v2)** con rutas `ANY /identity/{proxy+}`, `ANY /catalog/{proxy+}`,
    `ANY /sales/{proxy+}` → integración Lambda payload 2.0.
-4. Variables de entorno por función (sin prefijo): `DATABASE_URL`, `JWT_SECRET`, `INTERNAL_API_KEY`,
-   `IDENTITY_SERVICE_URL`, `CATALOG_SERVICE_URL`, ... (ver `.env.example`).
-5. Recomendado: RDS Proxy para el pool de conexiones, secretos en Secrets Manager, y reemplazar
+4. Variables de entorno por función: las mismas de `config/.env.example` (menos `*_ADMIN_*`, `*_OWNER_*`,
+   `LIQUIBASE_*` y `VITE_*`). Cada función solo necesita su `DATABASE_<SERVICIO>`.
+5. Migraciones desde CI o tu máquina: `npm run db -- prod update` (usa `config/.env.prod`).
+6. Recomendado: RDS Proxy para el pool de conexiones, secretos en Secrets Manager, y reemplazar
    `HttpServiceTransport` por un transporte de invocación directa o rutas internas privadas
    (punto de extensión: `CoreToken.ServiceTransport`).
 
 ## Agregar un módulo nuevo
 
-1. `INSERT` en `modules` (y permisos CRUD con el mismo script de `003_seed_catalog.sql`).
+1. Nuevo changeset Liquibase en `sql/identity/` con el `INSERT` en `modules` y sus permisos CRUD (como `003_seed_catalog.sql`).
 2. Agregar el código al enum `ModuleCode` en `shared/src/enums/access.enums.ts`.
 3. Crear el microservicio o controlador con `@Permission(ModuleCode.NUEVO, PermissionAction.X)`.
 4. Agregarlo al menú del frontend correspondiente con `module: ModuleCode.NUEVO`.

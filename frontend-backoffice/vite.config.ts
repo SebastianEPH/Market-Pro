@@ -6,6 +6,8 @@ const fromRoot = (path: string) => fileURLToPath(new URL(path, import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
+  // Variables por entorno desde config/.env.<modo> (vite --mode dev | prod); solo se exponen las VITE_*
+  envDir: fromRoot('../config'),
   resolve: {
     // Se usa el código fuente de los paquetes compartidos (sin compilarlos antes)
     alias: [

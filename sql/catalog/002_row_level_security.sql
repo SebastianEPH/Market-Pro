@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset market-pro:catalog-002-row-level-security splitStatements:false
 -- ------------------------------------------------------------------
 -- Row Level Security por tenant (market_catalog).
 -- ------------------------------------------------------------------
@@ -23,3 +25,6 @@ END $$;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO market_app;
 GRANT EXECUTE ON FUNCTION app_current_tenant() TO market_app;
+
+-- La aplicación no debe poder alterar el historial de migraciones de Liquibase
+REVOKE ALL ON TABLE databasechangelog, databasechangeloglock FROM market_app;

@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset market-pro:identity-003-seed-catalog splitStatements:false
 -- ------------------------------------------------------------------
 -- Semilla del catálogo global: módulos, permisos CRUD y features.
 -- Los códigos deben coincidir con los enums ModuleCode / FeatureCode

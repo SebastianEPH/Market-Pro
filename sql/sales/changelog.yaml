@@ -1,0 +1,8 @@
+# Changelog Liquibase de la base market_sales. Se ejecuta con: npm run db -- <env> update
+databaseChangeLog:
+  - include:
+      file: 001_schema.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 002_row_level_security.sql
+      relativeToChangelogFile: true

@@ -5,6 +5,8 @@ export * from './enums/core.enums.js';
 export * from './di/core-token.enum.js';
 export * from './utils/constructor.js';
 export * from './utils/ttl-cache.js';
+export * from './config/env.enum.js';
+export * from './config/environment.js';
 export * from './config/app-config.js';
 export * from './logging/logger.js';
 export * from './errors/app-error.js';

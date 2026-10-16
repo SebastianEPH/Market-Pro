@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset market-pro:identity-001-schema splitStatements:false
 -- ------------------------------------------------------------------
 -- market_identity: tenants (compradores), usuarios, roles, módulos,
 -- permisos y características (features).

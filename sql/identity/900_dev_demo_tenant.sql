@@ -1,7 +1,9 @@
+--liquibase formatted sql
+--changeset market-pro:identity-900-dev-demo-tenant splitStatements:false context:dev
 -- ------------------------------------------------------------------
 -- SOLO DESARROLLO: tenant de demostración "demo".
 --   Login backoffice/POS -> tienda: demo | email: owner@demo.local | password: Admin123*
--- Eliminar este archivo (y sql/catalog/900_*) para producción.
+-- Solo se aplica con el contexto Liquibase "dev" (LIQUIBASE_CONTEXTS).
 -- ------------------------------------------------------------------
 SELECT set_config('app.scope', 'platform', false);
 

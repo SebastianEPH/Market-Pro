@@ -18,24 +18,32 @@
     "frontend-pos"
   ],
   "scripts": {
-    "start": "node scripts/dev.mjs",
-    "build":"npm run build:backend && npm run build:frontends",
+    "start": "node scripts/dev.mjs dev",
+    "build": "npm run build:backend && npm run build:frontends",
     "build:backend": "tsc -b backend/tsconfig.json",
     "build:frontends": "npm run build -w @market-pro/frontend-admin && npm run build -w @market-pro/frontend-backoffice && npm run build -w @market-pro/frontend-pos",
     "watch:backend": "tsc -b backend/tsconfig.json --watch --preserveWatchOutput",
-    "start:gateway": "node --watch --env-file-if-exists=.env backend/local-gateway/dist/main.js",
+    "start:gateway": "node --watch backend/local-gateway/dist/main.js dev",
+    "start:gateway:prod": "node backend/local-gateway/dist/main.js prod",
     "dev:admin": "npm run dev -w @market-pro/frontend-admin",
     "dev:backoffice": "npm run dev -w @market-pro/frontend-backoffice",
     "dev:pos": "npm run dev -w @market-pro/frontend-pos",
     "typecheck": "tsc -b backend/tsconfig.json && npm run typecheck -w @market-pro/frontend-admin && npm run typecheck -w @market-pro/frontend-backoffice && npm run typecheck -w @market-pro/frontend-pos",
     "hash-password": "node backend/services/identity/dist/scripts/hash-password.js",
-    "db:up": "docker compose up -d postgres",
-    "db:down": "docker compose down",
-    "db:reset": "docker compose down -v && docker compose up -d postgres",
+    "db": "node scripts/db.mjs",
+    "db:setup": "node scripts/db.mjs dev setup",
+    "db:migrate": "node scripts/db.mjs dev update",
+    "db:status": "node scripts/db.mjs dev status",
+    "db:history": "node scripts/db.mjs dev history",
+    "db:reset": "node scripts/db.mjs dev reset",
+    "db:migrate:prod": "node scripts/db.mjs prod update",
+    "db:status:prod": "node scripts/db.mjs prod status",
     "clean": "tsc -b backend/tsconfig.json --clean"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
+    "liquibase": "^4.28.1",
+    "pg": "^8.23.1",
     "typescript": "^5.9.3"
   }
 }

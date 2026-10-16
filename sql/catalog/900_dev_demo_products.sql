@@ -1,5 +1,7 @@
+--liquibase formatted sql
+--changeset market-pro:catalog-900-dev-demo-products splitStatements:false context:dev
 -- ------------------------------------------------------------------
--- SOLO DESARROLLO: productos del tenant demo.
+-- SOLO DESARROLLO (contexto Liquibase "dev"): productos del tenant demo.
 -- ------------------------------------------------------------------
 SELECT set_config('app.tenant_id', '01960000-0000-7000-8000-000000000001', false);
 

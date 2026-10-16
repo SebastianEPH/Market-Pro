@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset market-pro:sales-001-schema splitStatements:false
 -- ------------------------------------------------------------------
 -- market_sales: caja, ventas y numeración por tenant.
 -- product_id / seller_id son referencias lógicas a otros microservicios

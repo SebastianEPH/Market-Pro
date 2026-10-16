@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2, Context } from 'aws-lambda';
+import { ENV, Environment } from '@market-pro/core';
 import { handler as catalogHandler } from '@market-pro/catalog-service';
 import { handler as identityHandler } from '@market-pro/identity-service';
 import { handler as salesHandler } from '@market-pro/sales-service';
@@ -26,7 +27,10 @@ const routes: GatewayRoute[] = [
   { prefix: '/sales', functionName: 'market-pro-sales', handler: salesHandler },
 ];
 
-const port = Number(process.env.GATEWAY_PORT ?? 3000);
+// El entorno llega como argumento: node dist/main.js <dev|prod|...> (los handlers ya lo cargaron)
+Environment.require([ENV.GATEWAY_PORT]);
+const port = Environment.number(ENV.GATEWAY_PORT);
+const debug = Environment.optional(ENV.LOG_LEVEL, 'info') === 'debug';
 
 const server = createServer(async (request, response) => {
   const started = Date.now();
@@ -56,7 +60,7 @@ const server = createServer(async (request, response) => {
     response.writeHead(502, { 'content-type': 'application/json' });
     response.end(JSON.stringify({ error: { code: 'UPSTREAM_ERROR', message: 'Internal server error' } }));
   } finally {
-    if (process.env.LOG_LEVEL === 'debug') {
+    if (debug) {
       console.log(`[gateway] ${request.method} ${request.url} -> ${route.functionName} ${response.statusCode} (${Date.now() - started}ms)`);
     }
   }

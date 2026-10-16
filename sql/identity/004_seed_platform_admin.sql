@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset market-pro:identity-004-seed-platform-admin splitStatements:false
 -- ------------------------------------------------------------------
 -- Administrador global de la plataforma.
 --   email:    admin@marketpro.local

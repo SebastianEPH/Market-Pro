@@ -5,8 +5,8 @@
   "type": "module",
   "description": "Backoffice del comprador: productos, inventario, ventas, usuarios, roles y configuración.",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -p tsconfig.json && vite build",
+    "dev": "vite --mode dev",
+    "build": "tsc -p tsconfig.json && vite build --mode prod",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json"
   },

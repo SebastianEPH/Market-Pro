@@ -5,10 +5,10 @@
   "type": "module",
   "description": "Emulador local de API Gateway HTTP API (payload 2.0) que invoca los handlers Lambda de cada microservicio.",
   "scripts": {
-    "build": "tsc -b",
-    "start": "node --env-file-if-exists=../../.env dist/main.js"
+    "build": "tsc -b"
   },
   "dependencies": {
+    "@market-pro/core": "*",
     "@market-pro/catalog-service": "*",
     "@market-pro/identity-service": "*",
     "@market-pro/sales-service": "*"
